@@ -7,6 +7,7 @@ from .models import Product
 from .models import ProductCategory
 from .models import Restaurant
 from .models import RestaurantMenuItem
+from .models import Order, OrderContents
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -104,3 +105,17 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(ProductCategory)
 class ProductAdmin(admin.ModelAdmin):
     pass
+
+
+class OrderContentsInline(admin.TabularInline):
+    model = OrderContents
+    extra = 0
+    ordering = ["item", "amount"]
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ["address", "phone", "first_name", "last_name"]
+    inlines = [
+        OrderContentsInline
+    ]

@@ -1,8 +1,8 @@
-import json
-
 from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.response import Response
 
 from .models import Product, Order
 
@@ -67,6 +67,18 @@ def register_order(request):
         return JsonResponse({
             "Error": error
         })
+
+    try:
+        payload["products"]
+    except KeyError:
+        content = {"products": "required field"}
+        return Response(content, status=status.HTTP_400_BAD_REQUEST)
+    if not payload["products"]:
+        content = {"products": "must not be empty"}
+        return Response(content, status=status.HTTP_400_BAD_REQUEST)
+    elif not isinstance(payload["products"], list):
+        content = {"products": "must be a list"}
+        return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     order = Order.objects.create(
         first_name=payload["firstname"],

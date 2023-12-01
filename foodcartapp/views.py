@@ -3,6 +3,7 @@ from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
+import phonenumbers
 
 from .models import Product, Order
 
@@ -59,6 +60,56 @@ def product_list_api(request):
     })
 
 
+def check_for_invalid_attributes(order_payload):
+    payload_attributes = ["products", "firstname", "lastname", "phonenumber", "address"]
+    missing_attributes = []
+    empty_attributes = []
+    for attribute in payload_attributes:
+        try:
+            order_payload[attribute]
+        except KeyError:
+            missing_attributes.append(attribute)
+    if missing_attributes:
+        content = {", ".join(attribute for attribute in missing_attributes): "required field(s)"}
+        return True, content
+
+    for attribute in payload_attributes:
+        if not order_payload[attribute]:
+            empty_attributes.append(attribute)
+    if empty_attributes:
+        content = {", ".join(attribute for attribute in empty_attributes): "field(s) must not be empty"}
+        return True, content
+
+    if not isinstance(order_payload["products"], list):
+        content = {"products": "must be a list"}
+        return True, content
+
+    non_str_attributes = []
+    for attribute in ["firstname", "lastname", "phonenumber", "address"]:
+        if not isinstance(order_payload[attribute], str):
+            non_str_attributes.append(attribute)
+    if non_str_attributes:
+        content = {", ".join(attribute for attribute in non_str_attributes): "not a valid sting"}
+        return True, content
+
+    if not phonenumbers.is_valid_number(phonenumbers.parse(order_payload["phonenumber"])):
+        content = {"phonenumber": "is not a valid phone number"}
+        return True, content
+
+    for item in order_payload["products"]:
+        if not item:
+            content = {"products": "cannot contain an empty object"}
+            return True, content
+        if not isinstance(item["product"], int) or not Product.objects.filter(id=item["product"]).exists():
+            content = {"products": f"invalid primary key {item['product']}"}
+            return True, content
+        if not isinstance(item["quantity"], int) or item["quantity"] < 1:
+            content = {"products": f"invalid quantity for product {item['product']}"}
+            return True, content
+
+    return False, None
+
+
 @api_view(["POST"])
 def register_order(request):
     try:
@@ -68,16 +119,8 @@ def register_order(request):
             "Error": error
         })
 
-    try:
-        payload["products"]
-    except KeyError:
-        content = {"products": "required field"}
-        return Response(content, status=status.HTTP_400_BAD_REQUEST)
-    if not payload["products"]:
-        content = {"products": "must not be empty"}
-        return Response(content, status=status.HTTP_400_BAD_REQUEST)
-    elif not isinstance(payload["products"], list):
-        content = {"products": "must be a list"}
+    is_invalid, content = check_for_invalid_attributes(payload)
+    if is_invalid:
         return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     order = Order.objects.create(

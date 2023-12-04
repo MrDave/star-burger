@@ -125,28 +125,28 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
-    first_name = models.CharField(verbose_name="имя", max_length=100)
-    last_name = models.CharField(verbose_name="фамилия", max_length=100)
+    firstname = models.CharField(verbose_name="имя", max_length=100)
+    lastname = models.CharField(verbose_name="фамилия", max_length=100)
     address = models.TextField(verbose_name="адрес доставки")
-    phone = PhoneNumberField(verbose_name="номер телефона")
+    phonenumber = PhoneNumberField(verbose_name="номер телефона")
 
     class Meta:
         verbose_name = "заказ"
         verbose_name_plural = "заказы"
         indexes = [
-            models.Index(fields=["last_name", "first_name"]),
-            models.Index(fields=["phone"])
+            models.Index(fields=["lastname", "firstname"]),
+            models.Index(fields=["phonenumber"])
         ]
 
     def __str__(self):
-        return f"{self.last_name} - {self.phone}"
+        return f"{self.lastname} - {self.phonenumber}"
 
 
 class OrderContents(models.Model):
     order = models.ForeignKey(Order, verbose_name="заказ", on_delete=models.CASCADE, related_name="contents")
-    item = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="+")
-    amount = models.PositiveSmallIntegerField(verbose_name="количество")
+    product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="+")
+    quantity = models.PositiveSmallIntegerField(verbose_name="количество")
 
     def __str__(self):
-        return f"{self.order} - {self.item}"
+        return f"{self.order} - {self.product}"
 

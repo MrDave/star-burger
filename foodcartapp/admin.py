@@ -110,12 +110,12 @@ class ProductAdmin(admin.ModelAdmin):
 class OrderContentsInline(admin.TabularInline):
     model = OrderContents
     extra = 0
-    ordering = ["item", "amount"]
+    ordering = ["product", "quantity"]
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ["address", "phone", "first_name", "last_name"]
+    list_display = ["address", "phonenumber", "firstname", "lastname"]
     inlines = [
         OrderContentsInline
     ]

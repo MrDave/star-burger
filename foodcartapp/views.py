@@ -66,11 +66,11 @@ class OrderContentsSerializer(ModelSerializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = OrderContentsSerializer(many=True)
+    products = OrderContentsSerializer(many=True, allow_empty=False, write_only=True)
 
     class Meta:
         model = Order
-        fields = ["firstname", "lastname", "address", "phonenumber", "products"]
+        fields = ["id", "firstname", "lastname", "address", "phonenumber", "products"]
 
 
 @api_view(["POST"])
@@ -94,7 +94,7 @@ def register_order(request):
     order_contents_fields = serializer.validated_data["products"]
     order_contents = [OrderContents(order=order, **fields) for fields in order_contents_fields]
     OrderContents.objects.bulk_create(order_contents)
-
-    return Response({
-        "order_id": order.id,
-    })
+    print(serializer.data)
+    return Response(
+        OrderSerializer(order).data
+    )

@@ -145,7 +145,7 @@ class Order(models.Model):
 class OrderContents(models.Model):
     order = models.ForeignKey(Order, verbose_name="заказ", on_delete=models.CASCADE, related_name="contents")
     product = models.ForeignKey(Product, verbose_name="товар", on_delete=models.CASCADE, related_name="+")
-    quantity = models.PositiveSmallIntegerField(verbose_name="количество")
+    quantity = models.IntegerField(verbose_name="количество", validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f"{self.order} - {self.product}"

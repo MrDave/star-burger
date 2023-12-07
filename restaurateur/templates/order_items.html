@@ -3,6 +3,7 @@
 {% block title %}Необработанные заказы | Star Burger{% endblock %}
 
 {% block content %}
+{% load humanize %}
   <center>
     <h2>Необработанные заказы</h2>
   </center>
@@ -14,6 +15,7 @@
    <table class="table table-responsive">
     <tr>
       <th>ID заказа</th>
+      <th>Сумма заказа</th>
       <th>Клиент</th>
       <th>Телефон</th>
       <th>Адрес доставки</th>
@@ -22,6 +24,7 @@
     {% for item in order_items %}
       <tr>
         <td>{{item.id}}</td>
+        <td>{{item.total_price|intcomma}} руб.</td>
         <td>{{item.firstname}} {{item.lastname}}</td>
         <td>{{item.phonenumber}}</td>
         <td>{{item.address}}</td>

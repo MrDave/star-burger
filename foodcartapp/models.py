@@ -7,7 +7,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 class OrderQuerySet(models.QuerySet):
     def with_total_price(self):
         return self.annotate(
-            total_price=Sum(F("contents__quantity") * F("contents__product__price"), output_field=models.DecimalField())
+            total_price=Sum(F("contents__cost"), output_field=models.DecimalField())
         )
 
 

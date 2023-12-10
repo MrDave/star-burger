@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.db import transaction
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -74,6 +75,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 @api_view(["POST"])
+@transaction.atomic
 def register_order(request):
     try:
         request.data
@@ -100,7 +102,6 @@ def register_order(request):
         **fields
     ) for fields in order_contents_fields]
     OrderContents.objects.bulk_create(order_contents)
-    print(serializer.data)
     return Response(
         OrderSerializer(order).data
     )

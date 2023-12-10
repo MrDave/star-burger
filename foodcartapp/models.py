@@ -159,7 +159,7 @@ class OrderContents(models.Model):
         verbose_name="стоимость позиции",
         validators=[MinValueValidator(0)],
         decimal_places=2,
-        max_digits=7
+        max_digits=7,
     )
 
     def __str__(self):

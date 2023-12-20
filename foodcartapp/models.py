@@ -141,17 +141,29 @@ class Order(models.Model):
         ("delivered", "Доставлен"),
     ]
 
+    PAYMENT_METHODS = [
+        ("cash", "Наличными"),
+        ("online", "Электронно"),
+    ]
+
     firstname = models.CharField(verbose_name="имя", max_length=100)
     lastname = models.CharField(verbose_name="фамилия", max_length=100)
     address = models.TextField(verbose_name="адрес доставки")
     phonenumber = PhoneNumberField(verbose_name="номер телефона")
     objects = OrderQuerySet.as_manager()
     status = models.CharField(verbose_name="статус заказа", choices=ORDER_STATUS, max_length=20, db_index=True)
+    payment_method = models.CharField(
+        verbose_name="способ оплаты",
+        choices=PAYMENT_METHODS,
+        max_length=12,
+        default="cash",
+        db_index=True
+    )
     comments = models.TextField(verbose_name="комментарии", blank=True)
 
     created_at = models.DateTimeField(verbose_name="время создания", default=timezone.now, db_index=True)
-    accepted_at = models.DateTimeField(verbose_name="время звонка",blank=True, null=True, db_index=True)
-    delivered_at = models.DateTimeField(verbose_name="время доставки",blank=True, null=True, db_index=True)
+    accepted_at = models.DateTimeField(verbose_name="время звонка", blank=True, null=True, db_index=True)
+    delivered_at = models.DateTimeField(verbose_name="время доставки", blank=True, null=True, db_index=True)
 
     class Meta:
         verbose_name = "заказ"

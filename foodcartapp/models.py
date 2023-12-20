@@ -146,6 +146,7 @@ class Order(models.Model):
     phonenumber = PhoneNumberField(verbose_name="номер телефона")
     objects = OrderQuerySet.as_manager()
     status = models.CharField(verbose_name="статус заказа", choices=ORDER_STATUS, max_length=20, db_index=True)
+    comments = models.TextField(verbose_name="комментарии", blank=True)
 
     class Meta:
         verbose_name = "заказ"

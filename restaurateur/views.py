@@ -101,7 +101,8 @@ def view_orders(request):
         "address": order.address,
         "total_price": order.total_price,
         "edit_link": reverse("admin:foodcartapp_order_change", args=(order.id,)),
-        "status": order.get_status_display()
+        "status": order.get_status_display(),
+        "comments": order.comments
     } for order in orders]
 
     return render(request, template_name='order_items.html', context={

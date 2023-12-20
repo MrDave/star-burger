@@ -137,7 +137,7 @@ class Order(models.Model):
         ("created", "Создан"),
         ("accepted", "Принят"),
         ("packed", "Собран"),
-        ("shipped", "Доставлен"),
+        ("delivered", "Доставлен"),
     ]
 
     firstname = models.CharField(verbose_name="имя", max_length=100)

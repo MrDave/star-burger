@@ -151,7 +151,13 @@ class Order(models.Model):
     address = models.TextField(verbose_name="адрес доставки")
     phonenumber = PhoneNumberField(verbose_name="номер телефона")
     objects = OrderQuerySet.as_manager()
-    status = models.CharField(verbose_name="статус заказа", choices=ORDER_STATUS, max_length=20, db_index=True)
+    status = models.CharField(
+        verbose_name="статус заказа",
+        choices=ORDER_STATUS,
+        max_length=20,
+        default="created",
+        db_index=True
+    )
     payment_method = models.CharField(
         verbose_name="способ оплаты",
         choices=PAYMENT_METHODS,

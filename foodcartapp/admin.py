@@ -122,6 +122,7 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [
         OrderContentsInline
     ]
+    raw_id_fields = ["available_restaurants"]
 
     def response_change(self, request, obj):
         res = super(OrderAdmin, self).response_change(request, obj)
@@ -130,3 +131,8 @@ class OrderAdmin(admin.ModelAdmin):
             return redirect(url)
         else:
             return res
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super(OrderAdmin, self).get_form(request, obj, **kwargs)
+        form.base_fields["cooked_by"].queryset = Restaurant.objects.filter(id__in=obj.available_restaurants.all())
+        return form

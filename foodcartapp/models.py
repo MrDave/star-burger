@@ -167,6 +167,21 @@ class Order(models.Model):
     )
     comments = models.TextField(verbose_name="комментарии", blank=True)
 
+    available_restaurants = models.ManyToManyField(
+        Restaurant,
+        verbose_name="доступные рестораны",
+        blank=True
+    )
+
+    cooked_by = models.ForeignKey(
+        Restaurant,
+        verbose_name="готовящий ресторан",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders"
+    )
+
     created_at = models.DateTimeField(verbose_name="время создания", default=timezone.now, db_index=True)
     accepted_at = models.DateTimeField(verbose_name="время звонка", blank=True, null=True, db_index=True)
     delivered_at = models.DateTimeField(verbose_name="время доставки", blank=True, null=True, db_index=True)

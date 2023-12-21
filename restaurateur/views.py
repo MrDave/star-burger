@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
 
-from foodcartapp.models import Product, Restaurant, Order
+from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 
 
 class Login(forms.Form):
@@ -93,6 +93,23 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.exclude(status="shipped").prefetch_related("contents").with_total_price().order_by("id")
+    product_ids = [(order.id, order.contents.values_list("product", flat=True)) for order in orders]
+    menu_items = RestaurantMenuItem.objects.all()
+
+    restaurant_contents = {}
+    for item in menu_items:
+        restaurant_contents[item.restaurant] = [
+            menu_item.product.id for menu_item in menu_items.filter(restaurant=item.restaurant)
+        ]
+    for order in orders:
+        for restaurant in restaurant_contents:
+            order_availability = [
+                product in restaurant_contents[restaurant]
+                for product in order.contents.values_list("product", flat=True)
+            ]
+            if False not in order_availability:
+                order.available_restaurants.add(restaurant)
+
     serialized_orders = [{
         "id": order.id,
         "firstname": order.firstname,
@@ -104,6 +121,8 @@ def view_orders(request):
         "status": order.get_status_display(),
         "comments": order.comments,
         "payment_method": order.get_payment_method_display(),
+        "available_restaurants": order.available_restaurants.all(),
+        "cooked_by": order.cooked_by
     } for order in orders]
 
     return render(request, template_name='order_items.html', context={

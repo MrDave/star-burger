@@ -29,29 +29,29 @@
 
     {% for item in order_items %}
       <tr>
-        <td>{{item.id}}</td>
-        <td>{{item.status}}</td>
-        <td>{{item.payment_method}}</td>
-        <td>{{item.total_price|intcomma}} руб.</td>
-        <td>{{item.firstname}} {{item.lastname}}</td>
-        <td>{{item.phonenumber}}</td>
-        <td>{{item.address}}</td>
-        <td>{{item.comments}}</td>
+        <td>{{ item.id }}</td>
+        <td>{{ item.status }}</td>
+        <td>{{ item.payment_method }}</td>
+        <td>{{ item.total_price|intcomma}} руб .</td>
+        <td>{{ item.firstname}} {{item.lastname }}</td>
+        <td>{{ item.phonenumber }}</td>
+        <td>{{ item.address }}</td>
+        <td>{{ item.comments }}</td>
         <td>
           {% if item.cooked_by %}
-            Готовит {{item.cooked_by}}
+            Готовит {{ item.cooked_by }}
           {% elif item.available_restaurants %}
             <details>
               <summary>▸ Может быть приготовлен ресторанами:</summary>
               <ul>
                 {% for restaurant in item.available_restaurants %}
-                  <li>{{restaurant}}</li>
+                  <li>{{ restaurant }}</li>
                 {% endfor %}
               </ul>
             </details>
           {% endif %}
         </td>
-        <td><a href="{{item.edit_link}}?next={{ request.get_full_path|urlencode }}">Редактировать</a></td>
+        <td><a href="{{ item.edit_link }}?next={{ request.get_full_path|urlencode }}">Редактировать</a></td>
       </tr>
     {% endfor %}
    </table>

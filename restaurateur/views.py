@@ -92,9 +92,8 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.exclude(status="shipped").prefetch_related("contents").with_total_price().order_by("id")
-    product_ids = [(order.id, order.contents.values_list("product", flat=True)) for order in orders]
-    menu_items = RestaurantMenuItem.objects.all()
+    orders = Order.objects.exclude(status="shipped").prefetch_related("contents").with_total_price().order_by("status", "id")
+    menu_items = RestaurantMenuItem.objects.prefetch_related("product")
 
     restaurant_contents = {}
     for item in menu_items:
@@ -102,13 +101,15 @@ def view_orders(request):
             menu_item.product.id for menu_item in menu_items.filter(restaurant=item.restaurant)
         ]
     for order in orders:
+        available_restaurants = []
         for restaurant in restaurant_contents:
             order_availability = [
                 product in restaurant_contents[restaurant]
                 for product in order.contents.values_list("product", flat=True)
             ]
             if False not in order_availability:
-                order.available_restaurants.add(restaurant)
+                available_restaurants.append(restaurant)
+        order.available_restaurants.set(available_restaurants)
 
     serialized_orders = [{
         "id": order.id,

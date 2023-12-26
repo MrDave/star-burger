@@ -96,10 +96,11 @@ def view_orders(request):
     menu_items = RestaurantMenuItem.objects.prefetch_related("product")
 
     restaurant_contents = {}
-    for item in menu_items:
-        restaurant_contents[item.restaurant] = [
-            menu_item.product.id for menu_item in menu_items.filter(restaurant=item.restaurant)
+    for restaurant in menu_items.values_list("restaurant", flat=True).distinct():
+        restaurant_contents[restaurant] = [
+            menu_item.product.id for menu_item in menu_items.filter(restaurant=restaurant)
         ]
+
     for order in orders:
         available_restaurants = []
         for restaurant in restaurant_contents:

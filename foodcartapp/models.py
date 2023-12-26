@@ -11,6 +11,16 @@ class OrderQuerySet(models.QuerySet):
             total_price=Sum(F("contents__cost"), output_field=models.DecimalField())
         )
 
+    def ordered_by_status_and_id(self):
+        return self.annotate(
+            status_order=models.Case(
+                models.When(status="created", then=1),
+                models.When(status="accepted", then=2),
+                models.When(status="packed", then=3),
+                models.When(status="delivered", then=4)
+            )
+        ).order_by("status_order", "id")
+
 
 class Restaurant(models.Model):
     name = models.CharField(

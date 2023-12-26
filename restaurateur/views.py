@@ -92,7 +92,9 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.exclude(status="shipped").prefetch_related("contents").with_total_price().order_by("status", "id")
+    orders = Order.objects.exclude(status="shipped").prefetch_related(
+        "contents"
+    ).with_total_price().ordered_by_status_and_id()
     menu_items = RestaurantMenuItem.objects.prefetch_related("product")
 
     restaurant_contents = {}

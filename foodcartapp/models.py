@@ -8,7 +8,7 @@ from django.utils import timezone
 class OrderQuerySet(models.QuerySet):
     def with_total_price(self):
         return self.annotate(
-            total_price=Sum(F("contents__cost"), output_field=models.DecimalField())
+            total_price=Sum(F("contents__cost") * F("contents__quantity"), output_field=models.DecimalField())
         )
 
     def ordered_by_status_and_id(self):

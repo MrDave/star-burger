@@ -1,14 +1,18 @@
+import requests
 from django import forms
-from django.shortcuts import redirect, render
-from django.views import View
-from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import user_passes_test
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-
+from django.contrib.auth.decorators import user_passes_test
+from django.db.models import F, Value
+from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
+from django.views import View
+from django.conf import settings
+from geopy import distance
 
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
+
+from datetime import datetime
 
 
 class Login(forms.Form):
@@ -90,19 +94,52 @@ def view_restaurants(request):
     })
 
 
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lat, lon
+
+
+def calculate_distance(order_address, restaurant_address):
+    try:
+        order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
+        restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
+    except (requests.HTTPError, requests.ConnectionError):
+        return "Ошибка определения координат"
+    if not order_coords:
+        return "Ошибка определения координат"
+    distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
+    return distance_to_restaurant.km
+
+
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.exclude(status="shipped").prefetch_related(
+    view_start_time = datetime.now()
+    print(f"{datetime.now()} - Start view function")
+    orders = Order.objects.exclude(status="delivered").prefetch_related(
         "contents"
     ).with_total_price().ordered_by_status_and_id()
     menu_items = RestaurantMenuItem.objects.prefetch_related("product")
 
+    print(f"{datetime.now()} - Beginning filling restaurant contents")
     restaurant_contents = {}
     for restaurant in menu_items.values_list("restaurant", flat=True).distinct():
         restaurant_contents[restaurant] = [
             menu_item.product.id for menu_item in menu_items.filter(restaurant=restaurant)
         ]
-
+    print(f"{datetime.now()} - Beginning for order in orders cycle")
     for order in orders:
         available_restaurants = []
         for restaurant in restaurant_contents:
@@ -114,21 +151,38 @@ def view_orders(request):
                 available_restaurants.append(restaurant)
         order.available_restaurants.set(available_restaurants)
 
-    serialized_orders = [{
-        "id": order.id,
-        "firstname": order.firstname,
-        "lastname": order.lastname,
-        "phonenumber": order.phonenumber,
-        "address": order.address,
-        "total_price": order.total_price,
-        "edit_link": reverse("admin:foodcartapp_order_change", args=(order.id,)),
-        "status": order.get_status_display(),
-        "comments": order.comments,
-        "payment_method": order.get_payment_method_display(),
-        "available_restaurants": order.available_restaurants.all(),
-        "cooked_by": order.cooked_by
-    } for order in orders]
-
+    print(f"{datetime.now()} - Beginning serializing orders")
+    serialized_orders = []
+    for order in orders:
+        print(f"{datetime.now()}Start order id{order.id}\nAddress: {order.address}")
+        start_time = datetime.now()
+        serialized_orders.append({
+            "id": order.id,
+            "firstname": order.firstname,
+            "lastname": order.lastname,
+            "phonenumber": order.phonenumber,
+            "address": order.address,
+            "total_price": order.total_price,
+            "edit_link": reverse("admin:foodcartapp_order_change", args=(order.id,)),
+            "status": order.get_status_display(),
+            "comments": order.comments,
+            "payment_method": order.get_payment_method_display(),
+            # "available_restaurants": order.available_restaurants.annotate(
+            #     distance=Value(calculate_distance(order.address, F("address")))
+            # ),
+            "available_restaurants": [{
+                "restaurant": restaurant,
+                "distance": calculate_distance(restaurant.address, order.address)
+            } for restaurant in order.available_restaurants.all()],
+            # Попытка сделать запрос не через annotate, а отдельно. Annotate -- задокументированный код выше
+            "cooked_by": order.cooked_by
+        })
+        end_time = datetime.now()
+        duration = end_time - start_time
+        print(f"Order id{order.id} completed in {duration.seconds} seconds.")
+    view_end_time = datetime.now()
+    total_view_duration = view_end_time - view_start_time
+    print(f"{datetime.now()} - all done!\nView rendered in {total_view_duration}")
     return render(request, template_name='order_items.html', context={
         "order_items": serialized_orders
     })

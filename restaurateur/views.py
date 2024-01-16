@@ -1,20 +1,15 @@
-import requests
+from datetime import datetime
+
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import user_passes_test
-from django.db.models import F, Value
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.conf import settings
-from geopy import distance
-from django.utils import timezone
 
-from coordinatesapp.models import Location
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
-
-from datetime import datetime
+from restaurateur.helper_functions import get_location, calculate_distance
 
 
 class Login(forms.Form):
@@ -94,60 +89,6 @@ def view_restaurants(request):
     return render(request, template_name="restaurants_list.html", context={
         'restaurants': Restaurant.objects.all(),
     })
-
-
-def fetch_coordinates(apikey, address):
-    base_url = "https://geocode-maps.yandex.ru/1.x"
-    response = requests.get(base_url, params={
-        "geocode": address,
-        "apikey": apikey,
-        "format": "json",
-    })
-    response.raise_for_status()
-    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
-
-    if not found_places:
-        return None
-
-    most_relevant = found_places[0]
-    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lon, lat
-
-
-def get_location(address):
-
-    location, created = Location.objects.get_or_create(
-        address=address,
-        defaults={
-            "last_fetched": timezone.now()
-        }
-    )
-    if created:
-        coords = fetch_coordinates(settings.YANDEX_API_KEY, location.address)
-        if coords:
-            location.lon, location.lat = coords
-            location.save()
-    return location
-
-
-# def calculate_distance(location_1, location_2):
-#     try:
-#         order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
-#         restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
-#     except (requests.HTTPError,):
-#         return "Ошибка определения координат"
-#     if not order_coords:
-#         return "Ошибка определения координат"
-#     distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
-#     return distance_to_restaurant.km
-
-def calculate_distance(location_1, location_2):
-    coordinates_1 = location_1.lat, location_1.lon
-    coordinates_2 = location_2.lat, location_2.lon
-    if None not in coordinates_1 and None not in coordinates_2:
-        return str(round(distance.distance(coordinates_1, coordinates_2).km, 2)) + " км"
-    else:
-        return "Ошибка определения координат"
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')

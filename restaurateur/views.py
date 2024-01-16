@@ -9,7 +9,9 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.conf import settings
 from geopy import distance
+from django.utils import timezone
 
+from coordinatesapp.models import Location
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 
 from datetime import datetime
@@ -109,19 +111,43 @@ def fetch_coordinates(apikey, address):
 
     most_relevant = found_places[0]
     lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lat, lon
+    return lon, lat
 
 
-def calculate_distance(order_address, restaurant_address):
-    try:
-        order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
-        restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
-    except (requests.HTTPError, requests.ConnectionError):
+def get_location(address):
+
+    location, created = Location.objects.get_or_create(
+        address=address,
+        defaults={
+            "last_fetched": timezone.now()
+        }
+    )
+    if created:
+        coords = fetch_coordinates(settings.YANDEX_API_KEY, location.address)
+        if coords:
+            location.lon, location.lat = coords
+            location.save()
+    return location
+
+
+# def calculate_distance(location_1, location_2):
+#     try:
+#         order_coords = fetch_coordinates(settings.YANDEX_API_KEY, order_address)
+#         restaurant_coords = fetch_coordinates(settings.YANDEX_API_KEY, restaurant_address)
+#     except (requests.HTTPError,):
+#         return "Ошибка определения координат"
+#     if not order_coords:
+#         return "Ошибка определения координат"
+#     distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
+#     return distance_to_restaurant.km
+
+def calculate_distance(location_1, location_2):
+    coordinates_1 = location_1.lat, location_1.lon
+    coordinates_2 = location_2.lat, location_2.lon
+    if None not in coordinates_1 and None not in coordinates_2:
+        return str(round(distance.distance(coordinates_1, coordinates_2).km, 2)) + " км"
+    else:
         return "Ошибка определения координат"
-    if not order_coords:
-        return "Ошибка определения координат"
-    distance_to_restaurant = distance.distance(restaurant_coords, order_coords)
-    return distance_to_restaurant.km
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
@@ -156,6 +182,9 @@ def view_orders(request):
     for order in orders:
         print(f"{datetime.now()}Start order id{order.id}\nAddress: {order.address}")
         start_time = datetime.now()
+
+        order_location = get_location(order.address)
+
         serialized_orders.append({
             "id": order.id,
             "firstname": order.firstname,
@@ -172,7 +201,7 @@ def view_orders(request):
             # ),
             "available_restaurants": [{
                 "restaurant": restaurant,
-                "distance": calculate_distance(restaurant.address, order.address)
+                "distance": calculate_distance(get_location(restaurant.address), order_location)
             } for restaurant in order.available_restaurants.all()],
             # Попытка сделать запрос не через annotate, а отдельно. Annotate -- задокументированный код выше
             "cooked_by": order.cooked_by

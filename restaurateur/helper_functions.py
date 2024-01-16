@@ -25,7 +25,7 @@ def retry_on_failure(max_retries=5, exceptions=(Exception,)):
     return decorator
 
 
-@retry_on_failure(max_retries=3, exceptions=(requests.ConnectionError))
+@retry_on_failure(max_retries=3, exceptions=(requests.ConnectionError,))
 def fetch_coordinates(apikey, address):
     base_url = "https://geocode-maps.yandex.ru/1.x"
     response = requests.get(base_url, params={

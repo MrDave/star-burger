@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
@@ -93,20 +91,16 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    view_start_time = datetime.now()
-    print(f"{datetime.now()} - Start view function")
     orders = Order.objects.exclude(status="delivered").prefetch_related(
         "contents"
     ).with_total_price().ordered_by_status_and_id()
     menu_items = RestaurantMenuItem.objects.prefetch_related("product")
 
-    print(f"{datetime.now()} - Beginning filling restaurant contents")
     restaurant_contents = {}
     for restaurant in menu_items.values_list("restaurant", flat=True).distinct():
         restaurant_contents[restaurant] = [
             menu_item.product.id for menu_item in menu_items.filter(restaurant=restaurant)
         ]
-    print(f"{datetime.now()} - Beginning for order in orders cycle")
     for order in orders:
         available_restaurants = []
         for restaurant in restaurant_contents:
@@ -118,12 +112,8 @@ def view_orders(request):
                 available_restaurants.append(restaurant)
         order.available_restaurants.set(available_restaurants)
 
-    print(f"{datetime.now()} - Beginning serializing orders")
     serialized_orders = []
     for order in orders:
-        print(f"{datetime.now()}Start order id{order.id}\nAddress: {order.address}")
-        start_time = datetime.now()
-
         order_location = get_location(order.address)
 
         serialized_orders.append({
@@ -137,22 +127,13 @@ def view_orders(request):
             "status": order.get_status_display(),
             "comments": order.comments,
             "payment_method": order.get_payment_method_display(),
-            # "available_restaurants": order.available_restaurants.annotate(
-            #     distance=Value(calculate_distance(order.address, F("address")))
-            # ),
             "available_restaurants": [{
                 "restaurant": restaurant,
                 "distance": calculate_distance(get_location(restaurant.address), order_location)
             } for restaurant in order.available_restaurants.all()],
-            # Попытка сделать запрос не через annotate, а отдельно. Annotate -- задокументированный код выше
             "cooked_by": order.cooked_by
         })
-        end_time = datetime.now()
-        duration = end_time - start_time
-        print(f"Order id{order.id} completed in {duration.seconds} seconds.")
-    view_end_time = datetime.now()
-    total_view_duration = view_end_time - view_start_time
-    print(f"{datetime.now()} - all done!\nView rendered in {total_view_duration}")
+
     return render(request, template_name='order_items.html', context={
         "order_items": serialized_orders
     })

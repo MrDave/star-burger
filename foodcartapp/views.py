@@ -1,11 +1,11 @@
 from django.db import transaction
 from django.http import JsonResponse
 from django.templatetags.static import static
-from rest_framework import serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Product, Order, OrderContents
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -60,29 +60,9 @@ def product_list_api(request):
     })
 
 
-class OrderContentsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderContents
-        fields = ["product", "quantity"]
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    products = OrderContentsSerializer(many=True, allow_empty=False, write_only=True)
-
-    class Meta:
-        model = Order
-        fields = ["id", "firstname", "lastname", "address", "phonenumber", "products"]
-
-
 @api_view(["POST"])
 @transaction.atomic
 def register_order(request):
-    try:
-        request.data
-    except ValueError as error:
-        return JsonResponse({
-            "Error": error
-        })
     serializer = OrderSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 

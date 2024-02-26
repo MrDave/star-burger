@@ -108,7 +108,7 @@ def view_orders(request):
                 product in restaurant_contents[restaurant]
                 for product in order.contents.values_list("product", flat=True)
             ]
-            if False not in order_availability:
+            if all(order_availability):
                 available_restaurants.append(restaurant)
         order.available_restaurants.set(available_restaurants)
 

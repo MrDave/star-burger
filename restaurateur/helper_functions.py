@@ -54,9 +54,12 @@ def get_location(address):
     )
     if created or None in (location.lon, location.lat):
         coords = fetch_coordinates(settings.YANDEX_API_KEY, location.address)
-        if coords:
-            location.lon, location.lat = coords
-            location.save()
+        try:
+            if coords:
+                location.lon, location.lat = coords
+                location.save()
+        except (ValueError, TypeError) as error:
+            logging.warning("Couldn't unpack coords\n", error)
     return location
 
 

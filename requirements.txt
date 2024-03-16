@@ -8,3 +8,4 @@ requests==2.31.*
 geopy==2.4.*
 rollbar~=1.0.0
 GitPython~=3.1.42
+psycopg2~=2.9.9

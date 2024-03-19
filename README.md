@@ -98,7 +98,7 @@ npm --version
 
 ```sh
 cd star-burger
-npm ci --dev
+npm ci --include=dev
 ```
 
 Команда `npm ci` создаст каталог `node_modules` и установит туда пакеты Node.js. Получится аналог виртуального окружения как для Python, но для Node.js.
@@ -136,6 +136,31 @@ Parcel будет следить за файлами в каталоге `bundle
 
 ## Как запустить prod-версию сайта
 
+Обновить проект из репозитория:
+```sh
+git pull
+```
+
+Создать/активировать виртуальное окружение:
+```sh
+python -m venv venv
+```
+- Windows: `.\venv\Scripts\activate`
+- MacOS/Linux: `source venv/bin/activate`
+
+Установить зависимости Python и Node.js:
+```sh
+pip install -r requirements.txt
+npm ci
+```
+Мигрировать базу данных:
+```sh
+python manage.py migrate
+```
+Собрать статику Django:
+```sh
+python manage.py collectstatic
+```
 Собрать фронтенд:
 
 ```sh
@@ -151,6 +176,65 @@ Parcel будет следить за файлами в каталоге `bundle
 - `ROLLBAR_TOKEN` — токен от сервиса Rollbar для логирования ошибок.
 - `ENVIRONMENT` — название окружения (используется Rollbar'ом). По умолчанию "undefined_environment"
 - `DB_URL` — [настройки базы данных в формате URL](https://github.com/jazzband/dj-database-url#url-schema), для PostgreSQL: `postgres://USER:PASSWORD@HOST:PORT/NAME`
+
+Запустить Django:
+```shell
+python manage.py runserver # dev сервер, не рекомендуется для production
+```
+
+### Если npm ci вылетает с "killed"
+
+Если `npm` не хватает памяти, [может помочь добавить файл подкачки](https://stackoverflow.com/a/45921532/22592675):
+```shell
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
+```
+
+### Деплойный скрипт
+Для упрощения процесса можно сделать bash скрипт для деплоя, который будет содержать в себе описанные выше процессы.
+Пример такого скрипта:
+
+```shell
+#! /usr/bin/bash
+
+set -e # обеспечивает завершение скрипта при ошибке
+
+cd /opt/star-burger/
+
+# Проверка, есть ли обновления в репозитории. Если обновлений нет, скрипт завершается
+git_result=$(git pull)
+if [[ "$git_result" == "Already up to date." ]]
+then
+	echo $git_result
+	exit 0
+fi
+
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+/bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=1024
+/sbin/mkswap /var/swap.1
+/sbin/swapon /var/swap.1
+
+npm ci --force # --force обеспечивает выполнение без взаимодействия с пользователем
+
+python manage.py migrate
+
+python manage.py collectstatic --noinput # --noinput для того же, для чего --force в npm ci
+
+./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+
+# обновление автоматизированных сервисов Django и nginx сервера
+systemctl restart star-burger.service
+systemctl reload nginx.service
+
+# отключает эффект от /sbin/swapon, иначе он выдаёт ошибку при последующих запусках
+/sbin/swapoff /var/swap.1
+
+echo Finished!
+```
 
 ## Цели проекта
 

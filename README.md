@@ -175,8 +175,8 @@ python manage.py collectstatic
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
 - `YANDEX_API_KEY` — API ключ для подключения [геокодера](https://developer.tech.yandex.com/services)
 - `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
-- `ROLLBAR_TOKEN` — токен от сервиса Rollbar для логирования ошибок.
-- `ENVIRONMENT` — название окружения (используется Rollbar'ом). По умолчанию "undefined_environment"
+- `ROLLBAR_TOKEN` — токен от сервиса Rollbar для логирования ошибок (опционально).
+- `ENVIRONMENT` — название окружения (используется Rollbar'ом). Опционально - по умолчанию "undefined_environment"
 - `DB_URL` — [настройки базы данных в формате URL](https://github.com/jazzband/dj-database-url#url-schema), для PostgreSQL: `postgres://USER:PASSWORD@HOST:PORT/NAME`
 
 Запустить Django:

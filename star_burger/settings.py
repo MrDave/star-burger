@@ -137,10 +137,12 @@ PHONENUMBER_DEFAULT_REGION = "RU"
 
 YANDEX_API_KEY = env.str("YANDEX_API_KEY")
 
-ROLLBAR = {
-    "access_token": env.str("ROLLBAR_TOKEN"),
-    "environment": env.str("ENVIRONMENT", "undefined_environment"),
-    "branch": Repo(path=BASE_DIR).active_branch.name,
-    "code_version": "1.0",
-    "root": BASE_DIR,
-}
+rollbar_token = env.str("ROLLBAR_TOKEN", None)
+if rollbar_token:
+    ROLLBAR = {
+        "access_token": rollbar_token,
+        "environment": env.str("ENVIRONMENT", "undefined_environment"),
+        "branch": Repo(path=BASE_DIR).active_branch.name,
+        "code_version": "1.0",
+        "root": BASE_DIR,
+    }

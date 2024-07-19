@@ -1,10 +1,18 @@
 services:
-  backend: 
-    build: backend
-    image: starburger_backend
-    depends_on:
-      frontend:
-        condition: service_completed_successfully
+  # backend: 
+  #   build: 
+  #     context: ../../backend
+  #   image: starburger_backend
+  #   depends_on:
+  #     frontend:
+  #       condition: service_completed_successfully
 
   frontend:
-    build: frontend
+    build: 
+      context: ../../frontend
+    volumes:
+      - bundles:/opt/static-jinja/frontend/bundles
+
+
+volumes:
+  bundles:

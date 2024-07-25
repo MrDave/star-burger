@@ -8,4 +8,4 @@ RUN apt update && \
 RUN --mount=type=bind,source=./requirements.txt,target=/tmp/requirements.txt \
     pip install -r /tmp/requirements.txt --no-cache-dir
 COPY src .
-ENTRYPOINT ["gunicorn", "-b", "127.0.0.1:8080", "star_burger.wsgi:application"]
+ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "star_burger.wsgi:application"]

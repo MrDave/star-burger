@@ -238,6 +238,10 @@ systemctl reload nginx.service
 echo Finished!
 ```
 
+## Using Docker Compose
+
+To use docker compose to run the project see [local deployment](/deployment/local_dev/README.md) and [server deployment](/deployment/do_server/compose.yaml) folders.
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).

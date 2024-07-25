@@ -1,18 +1,68 @@
 services:
-  # backend: 
-  #   build: 
-  #     context: ../../backend
-  #   image: starburger_backend
-  #   depends_on:
-  #     frontend:
-  #       condition: service_completed_successfully
+  django-collectstatic:
+    build: 
+      context: ../../backend
+    image: starburger_backend
+    env_file: .env
+    depends_on:
+      db: 
+        condition: service_started
+      frontend:
+        condition: service_completed_successfully
+    volumes:
+      - assets:/opt/star-burger/assets
+      - bundles:/opt/star-burger/bundles
+      - static:/opt/star-burger/staticfiles
+    entrypoint: ["python", "manage.py", "collectstatic", "--noinput"]
+
+  backend: 
+    build: 
+      context: ../../backend
+    image: starburger_backend
+    env_file: .env
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
+      django-collectstatic:
+        condition: service_completed_successfully
+    ports:
+      - 8080:8080
+    volumes:  
+      - media:/usr/src/app/media
 
   frontend:
     build: 
       context: ../../frontend
+    image: starburger_frontend
     volumes:
-      - bundles:/opt/static-jinja/frontend/bundles
+      - bundles:/opt/star-burger/frontend/bundles
+
+  db:
+    image: postgres:12-alpine
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    env_file: .env
+    ports:
+      - 5432:5432
+
+  nginx:
+    image: nginx:1-bookworm
+    ports:
+      - 8000:80
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./star-burger.conf:/etc/nginx/conf.d/default.conf
+      - media:/opt/star-burger/media
+      - static:/opt/star-burger/staticfiles
 
 
 volumes:
   bundles:
+  db_data:
+  assets:
+  media:
+  static:

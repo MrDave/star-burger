@@ -3,7 +3,7 @@ import os
 import dj_database_url
 
 from environs import Env
-from git import Repo
+# from git import Repo
 
 
 env = Env()
@@ -142,7 +142,7 @@ if rollbar_token:
     ROLLBAR = {
         "access_token": rollbar_token,
         "environment": env.str("ENVIRONMENT", "undefined_environment"),
-        "branch": Repo(path=BASE_DIR).active_branch.name,
+        # "branch": Repo(path=BASE_DIR).active_branch.name,
         "code_version": "1.0",
         "root": BASE_DIR,
     }

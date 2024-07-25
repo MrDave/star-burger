@@ -146,3 +146,5 @@ if rollbar_token:
         "code_version": "1.0",
         "root": BASE_DIR,
     }
+
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", [])

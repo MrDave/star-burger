@@ -30,7 +30,7 @@ services:
     ports:
       - 8080:8080
     volumes:  
-      - media:/usr/src/app/media
+      - media:/opt/star-burger/media
 
   frontend:
     build: 

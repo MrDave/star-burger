@@ -134,5 +134,6 @@ class OrderAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super(OrderAdmin, self).get_form(request, obj, **kwargs)
-        form.base_fields["cooked_by"].queryset = Restaurant.objects.filter(id__in=obj.available_restaurants.all())
+        if obj:
+            form.base_fields["cooked_by"].queryset = Restaurant.objects.filter(id__in=obj.available_restaurants.all())
         return form

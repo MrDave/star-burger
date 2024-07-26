@@ -1,0 +1,10 @@
+[Unit]
+Description=Clear Django sessions
+
+[Service]
+ExecStart=/opt/star-burger/venv/bin/python3 /opt/star-burger/manage.py clearsessions
+Restart=on-abort
+WorkingDirectory=/opt/star-burger
+
+[Install]
+WantedBy=multi-user.target

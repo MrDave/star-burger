@@ -1,10 +1,41 @@
 services:
-  backend: 
-    build: backend
+  django-collectstatic:
+    build: 
+      context: ../../backend
     image: starburger_backend
+    env_file: .env
     depends_on:
       frontend:
         condition: service_completed_successfully
+    volumes:
+      - bundles:/opt/star-burger/bundles
+      - static:/opt/star-burger/staticfiles
+    entrypoint: ["python", "manage.py", "collectstatic", "--noinput"]
+
+  backend: 
+    build: 
+      context: ../../backend
+    image: starburger_backend
+    env_file: .env
+    depends_on:
+      frontend:
+        condition: service_completed_successfully
+      django-collectstatic:
+        condition: service_completed_successfully
+    ports:
+      - 8080:8080
+    volumes:  
+      - media:/opt/star-burger/media
+    entrypoint: ["gunicorn", "-b", "0.0.0.0:8080", "star_burger.wsgi:application"]
 
   frontend:
-    build: frontend
+    build: 
+      context: ../../frontend
+    image: starburger_frontend
+    volumes:
+      - bundles:/opt/star-burger/frontend/bundles
+
+volumes:
+  bundles:
+  media:
+  static:

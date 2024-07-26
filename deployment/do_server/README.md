@@ -49,7 +49,7 @@ Note: all commands including `docker compose` must be run from the directory wit
 
 After setting the project up, run `docker compose up`. This will build frontend files, collect static and launch Django backend via gunicorn. Use [deployment script](#deployment-script) for the first launch.
 
-The website can now be accessed at http://localhost:8000/ and admin panel at http://localhost:8000/admin/
+The website can now be accessed as per your usual server ip / domain settings.
 
 ### First launch
 When launching project for the first time, you need to migrate database and create new superuser (See below).

@@ -27,7 +27,7 @@ services:
     volumes:  
       - media:/opt/star-burger/media
     entrypoint: ["gunicorn", "-b", "0.0.0.0:8080", "star_burger.wsgi:application"]
-    network: "host"
+    network_mode: "host"
 
   frontend:
     build: 
@@ -40,4 +40,3 @@ volumes:
   bundles:
   media:
   static:
-    

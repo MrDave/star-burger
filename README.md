@@ -240,7 +240,7 @@ echo Finished!
 
 ## Using Docker Compose
 
-To use docker compose to run the project see [local deployment](/deployment/local_dev/README.md) and [server deployment](/deployment/do_server/compose.yaml) folders.
+To use docker compose to run the project see [local deployment](/deployment/local_dev/README.md) and [server deployment](/deployment/do_server/README.md) folders.
 
 ## Цели проекта
 
